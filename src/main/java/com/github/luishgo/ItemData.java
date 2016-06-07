@@ -6,14 +6,10 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.google.gson.Gson;
 
@@ -58,7 +54,7 @@ public class ItemData {
 	}
 
 	public void decrypt(EncryptionKey key) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		byte[] password = decodeBase64(encrypted);
+		byte[] password = Base64.decode(encrypted);
 		
 		byte[] passwordSalt = Arrays.copyOfRange(password, 8, 16);
 		byte[] passwordData = Arrays.copyOfRange(password, 16, password.length);
@@ -67,7 +63,7 @@ public class ItemData {
 		byte[] passwordKey = deriveAESKey(keyRaw, passwordSalt);
 		byte[] passwordIV = deriveAESKey(passwordKey, keyRaw, passwordSalt);
 		
-		byte[] passwordRaw = decrypt(passwordData, passwordKey, passwordIV);
+		byte[] passwordRaw = Crypto.decrypt(passwordData, passwordKey, passwordIV);
 		
 		decrypted = new String(passwordRaw);
 	}
@@ -77,19 +73,5 @@ public class ItemData {
 		Arrays.stream(data).forEach(d -> md.update(d));
 		return md.digest();
 	}
-	
-	private byte[] decrypt(byte[] keyData, byte[] aesKey, byte[] aesIV) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		SecretKeySpec keyspec = new SecretKeySpec(aesKey, "AES");
-		IvParameterSpec ivspec = new IvParameterSpec(aesIV);
-		cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
-		return cipher.doFinal(keyData);
-	}
-	
-	private byte[] decodeBase64(String data) {
-		//Necessário remover todos os backslashs para a conversão funcionar
-		return Base64.getDecoder().decode(data.replace("\\", ""));
-	}
-	
 	
 }
