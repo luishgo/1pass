@@ -1,10 +1,13 @@
 package com.github.luishgo;
 
 import java.beans.Transient;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -14,6 +17,8 @@ import javax.crypto.NoSuchPaddingException;
 import com.google.gson.Gson;
 
 public class ItemData {
+	
+	private static final String SALTED = "Salted__";
 
 	private String uuid;
 	
@@ -67,6 +72,23 @@ public class ItemData {
 		
 		decrypted = new String(passwordRaw);
 	}
+	
+	public String encrypt(EncryptionKey key, String data) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
+		byte[] passwordSalt = Base64.decode("PMRz0L8VfkY=");
+		
+		byte[] keyRaw = key.getKeyRaw();
+		byte[] passwordKey = deriveAESKey(keyRaw, passwordSalt);
+		byte[] passwordIV = deriveAESKey(passwordKey, keyRaw, passwordSalt);
+
+		byte[] dataRaw = Crypto.encrypt(data.getBytes(), passwordKey, passwordIV);
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream(passwordSalt.length + dataRaw.length + SALTED.length());
+		baos.write(SALTED.getBytes());
+		baos.write(passwordSalt);
+		baos.write(dataRaw);
+		
+		return Base64.encode(baos.toByteArray());
+	}	
 	
 	private byte[] deriveAESKey(byte[]... data) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance("MD5");

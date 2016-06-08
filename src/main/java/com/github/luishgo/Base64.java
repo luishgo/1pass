@@ -6,5 +6,9 @@ public class Base64 {
 		//Necessário remover todos os backslashs para a conversão funcionar
 		return java.util.Base64.getDecoder().decode(data.replace("\\", ""));
 	}
+
+	public static String encode(byte[] byteArray) {
+		return java.util.Base64.getEncoder().encodeToString(byteArray);
+	}
 	
 }

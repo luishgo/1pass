@@ -21,4 +21,12 @@ public class Crypto {
 		return cipher.doFinal(keyData);
 	}
 
+	public static byte[] encrypt(byte[] data, byte[] aesKey, byte[] aesIV) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+		SecretKeySpec keyspec = new SecretKeySpec(aesKey, "AES");
+		IvParameterSpec ivspec = new IvParameterSpec(aesIV);
+		cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+		return cipher.doFinal(data);
+	}
+
 }

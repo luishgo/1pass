@@ -49,21 +49,16 @@ public class Vault {
 	}
 
 	public void unlock(String masterPassword) {
-		EncryptionKey sl3 = getKeyAlreadyExtracted("SL3", masterPassword);
-		EncryptionKey sl5 = getKeyAlreadyExtracted("SL5", masterPassword);
+		keys.stream().forEach(k -> {
+			try {
+				k.extractKeyRaw(masterPassword);
+			} catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException
+					| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
-	private EncryptionKey getKeyAlreadyExtracted(String level, String masterPassword) {
-		EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(level)).findFirst().get();
-		try {
-			key.extractKeyRaw(masterPassword);
-		} catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException
-				| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
-			e.printStackTrace();
-		}
-		return key;
-	}
-
 	public String getDecryptedDataFrom(String title) {
 		ItemData itemData = getItems().stream().filter(i -> title.equals(i.getTitle())).findFirst().get();
 		EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
@@ -76,10 +71,31 @@ public class Vault {
 		}
 		return null;
 	}
+	
+	public String getEncryptedDataFrom(String title, String data) {
+		ItemData itemData = getItems().stream().filter(i -> title.equals(i.getTitle())).findFirst().get();
+		EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
+		try {
+			return itemData.encrypt(key, data);
+		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
+				| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | InvalidKeySpecException | IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 	public List<ItemData> getItems() {
-        try (Stream<Path> stream = Files.walk(vaultPath.resolve("data/default"))) {
-        	return parseItems(stream);
+		Gson gson = new GsonBuilder().create();
+        try (Stream<Path> files = Files.walk(vaultPath.resolve("data/default"))) {
+    		return files.filter(p -> p.toFile().getName().endsWith(".1password")).map(p -> {
+    			try(Stream<String> content = Files.lines(p)) {
+    				String json = content.findFirst().get();
+    				return gson.fromJson(json, ItemData.class);
+    		    } catch (IOException e) {
+    				e.printStackTrace();
+    			}
+    			return null;
+    		}).collect(Collectors.toList());
         } catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -87,18 +103,6 @@ public class Vault {
 		return null;
 	}
 	
-	private List<ItemData> parseItems(Stream<Path> stream) {
-		Gson gson = new GsonBuilder().create();
-		return stream.filter(p -> p.toFile().getName().endsWith(".1password")).map(p -> {
-			try(Stream<String> content = Files.lines(p)) {
-				String json = content.findFirst().get();
-				return gson.fromJson(json, ItemData.class);
-		    } catch (IOException e) {
-				e.printStackTrace();
-			}
-			return null;
-		}).collect(Collectors.toList());
-	}
 
 
 }
