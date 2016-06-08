@@ -11,6 +11,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,27 +61,33 @@ public class Vault {
 	}
 	
 	public String getDecryptedDataFrom(String title) {
-		ItemData itemData = getItems().stream().filter(i -> title.equals(i.getTitle())).findFirst().get();
-		EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
-		try {
-			itemData.decrypt(key);
-			return itemData.getDecrypted();
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
-				| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
-			e.printStackTrace();
+		Optional<ItemData> possibleItemData = getItems().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
+		if (possibleItemData.isPresent()) {
+			ItemData itemData = possibleItemData.get();
+			EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
+			try {
+				itemData.decrypt(key);
+				return itemData.getDecrypted();
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
+					| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+				e.printStackTrace();
+			}
 		}
 		return null;
 	}
 	
 	public String getEncryptedDataFrom(String title, String data) {
-		ItemData itemData = getItems().stream().filter(i -> title.equals(i.getTitle())).findFirst().get();
-		EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
-		try {
-			return itemData.encrypt(key, data);
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
-				| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | InvalidKeySpecException | IOException e) {
-			e.printStackTrace();
-		}
+		Optional<ItemData> possibleItemData = getItems().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
+		if (possibleItemData.isPresent()) {
+			ItemData itemData = possibleItemData.get();
+			EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
+			try {
+				return itemData.encrypt(key, data);
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
+					| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | InvalidKeySpecException | IOException e) {
+				e.printStackTrace();
+			}
+		}		
 		return null;
 	}
 
