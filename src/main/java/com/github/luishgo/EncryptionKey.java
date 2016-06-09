@@ -90,6 +90,17 @@ public class EncryptionKey {
 		byte[] derivedKey = deriveKey(masterPassword, iterations, keySalt);
 		
 		keyRaw = Crypto.decryptKey(keyData, derivedKey);
+		
+		byte[] validationDecoded = Base64.decode(validation);
+		
+		byte[] validationSalt = Arrays.copyOfRange(validationDecoded, 8, 16);
+		byte[] validationData = Arrays.copyOfRange(validationDecoded, 16, validationDecoded.length);
+		
+		byte[] validationRaw = Crypto.decryptData(validationData, keyRaw, validationSalt);
+		
+		if (!new String(validationRaw).equalsIgnoreCase(new String(keyRaw))) {
+			throw new InvalidKeyException("Key Data != Validation!!");
+		}
 	}
 	
 	private byte[] deriveKey(String masterpass, int iterations, byte[] keySalt) throws NoSuchAlgorithmException, InvalidKeySpecException {
