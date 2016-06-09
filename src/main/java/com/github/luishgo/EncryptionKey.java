@@ -9,8 +9,6 @@ import java.security.spec.InvalidKeySpecException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -41,13 +39,12 @@ public class EncryptionKey {
 	}
 	
 	private void generate(String masterPassword) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
-		SaltedData saltedKey = SaltedData.newRandom();
-		byte[] derivedKey = deriveKey(masterPassword, iterations, saltedKey.getSalt());
-		saltedKey.encryptKey(derivedKey);
+		SaltedKey saltedKey = SaltedKey.newRandom();
+		saltedKey.encryptKey(masterPassword, iterations);
 		this.data = saltedKey.getEncoded();
 		
-		SaltedData validationSaltedData = SaltedData.newFromDecrypted(saltedKey.getDecryptedData());
-		validationSaltedData.encryptData(saltedKey.getDecryptedData());
+		SaltedData validationSaltedData = SaltedData.newFromDecrypted(saltedKey.getDecryptedKey());
+		validationSaltedData.encryptData(saltedKey.getDecryptedKey());
 		this.validation = validationSaltedData.getEncoded();
 	}
 	
@@ -78,11 +75,8 @@ public class EncryptionKey {
 	public void decryptKey(String masterPassword)
 			throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException,
 			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		SaltedData decodedKey = SaltedData.newFromEncoded(data);
-		
-		byte[] derivedKey = deriveKey(masterPassword, iterations, decodedKey.getSalt());
-		
-		decryptedKey = decodedKey.decryptKey(derivedKey);
+		SaltedKey decodedKey = SaltedKey.newFromEncoded(data);
+		decryptedKey = decodedKey.decryptKey(masterPassword, iterations);
 		
 		byte[] decryptedValidation = SaltedData.newFromEncoded(validation).decryptData(decryptedKey);
 		
@@ -91,12 +85,6 @@ public class EncryptionKey {
 		}
 	}
 	
-	private byte[] deriveKey(String masterpass, int iterations, byte[] keySalt) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		PBEKeySpec spec = new PBEKeySpec(masterpass.toCharArray(), keySalt, iterations, 32*8);
-		SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-		return skf.generateSecret(spec).getEncoded();
-	}
-
 	public JsonElement toJSON() {
 		return new JsonParser().parse(new Gson().toJson(this));
 	}
