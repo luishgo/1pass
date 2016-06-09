@@ -2,10 +2,15 @@ package com.github.luishgo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -25,6 +30,16 @@ public class VaultTest {
 		Vault.create("src/test/resources/tmp.agilekeychain", "tmp");
 		
 		Vault.open("src/test/resources/tmp.agilekeychain");
+		
+		try (Stream<Path> files = Files.walk(Paths.get("src/test/resources/tmp.agilekeychain"))) {
+			files.sorted((p1, p2) -> Integer.compare(p2.toString().length(), p1.toString().length())).forEach(f -> {
+				try {
+					Files.deleteIfExists(f);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+		}
 	}
 	
 	@Test(expected=FileNotFoundException.class) public void shouldNotOpenVault() throws IOException {

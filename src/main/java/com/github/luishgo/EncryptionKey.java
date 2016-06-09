@@ -5,8 +5,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
-import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -30,7 +28,7 @@ public class EncryptionKey {
 	
 	private int iterations;
 	
-	private byte[] keyRaw;
+	private byte[] decryptedKey;
 	
 	public static EncryptionKey generate(String masterPassword, int iterations, String securityLevel) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		EncryptionKey key = new EncryptionKey();
@@ -48,11 +46,11 @@ public class EncryptionKey {
 		
 		byte[] derivedKey = deriveKey(masterPassword, iterations, keySalt);
 		
-		this.data = Base64.encodeSaltedKey(keySalt, Crypto.encryptKey(keyData, derivedKey));
+		this.data = new SaltedData(keySalt, Crypto.encryptKey(keyData, derivedKey)).getEncoded();
 		
 		byte[] validationSalt = Crypto.randomByteArray(8);
 		
-		this.validation = Base64.encodeSaltedKey(validationSalt, Crypto.encryptData(keyData, keyData, validationSalt));
+		this.validation = new SaltedData(validationSalt, Crypto.encryptData(keyData, keyData, validationSalt)).getEncoded(); 
 	}
 	
 	public String getData() {
@@ -75,30 +73,24 @@ public class EncryptionKey {
 		return iterations;
 	}
 	
-	public byte[] getKeyRaw() {
-		return keyRaw;
+	public byte[] getDecryptedKey() {
+		return decryptedKey;
 	}
 	
-	public void extractKeyRaw(String masterPassword)
+	public void decryptKey(String masterPassword)
 			throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException,
 			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		byte[] key = Base64.decode(data);
+		SaltedData decodedKey = new SaltedData(data);
 		
-		byte[] keySalt = Arrays.copyOfRange(key, 8, 16);
-		byte[] keyData = Arrays.copyOfRange(key, 16, key.length);
+		byte[] derivedKey = deriveKey(masterPassword, iterations, decodedKey.getSalt());
 		
-		byte[] derivedKey = deriveKey(masterPassword, iterations, keySalt);
+		decryptedKey = Crypto.decryptKey(decodedKey.getEncryptedData(), derivedKey);
 		
-		keyRaw = Crypto.decryptKey(keyData, derivedKey);
+		SaltedData decodedValidation = new SaltedData(validation);
 		
-		byte[] validationDecoded = Base64.decode(validation);
+		byte[] decryptedValidation = Crypto.decryptData(decodedValidation.getEncryptedData(), decryptedKey, decodedValidation.getSalt());
 		
-		byte[] validationSalt = Arrays.copyOfRange(validationDecoded, 8, 16);
-		byte[] validationData = Arrays.copyOfRange(validationDecoded, 16, validationDecoded.length);
-		
-		byte[] validationRaw = Crypto.decryptData(validationData, keyRaw, validationSalt);
-		
-		if (!new String(validationRaw).equalsIgnoreCase(new String(keyRaw))) {
+		if (!new String(decryptedValidation).equalsIgnoreCase(new String(decryptedKey))) {
 			throw new InvalidKeyException("Key Data != Validation!!");
 		}
 	}

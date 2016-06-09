@@ -6,7 +6,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -55,20 +54,14 @@ public class ItemData {
 	}
 
 	public void decrypt(EncryptionKey key) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		byte[] password = Base64.decode(encrypted);
-		
-		byte[] passwordSalt = Arrays.copyOfRange(password, 8, 16);
-		byte[] passwordData = Arrays.copyOfRange(password, 16, password.length);
-		
-		decrypted = new String(Crypto.decryptData(passwordData, key.getKeyRaw(), passwordSalt));
+		SaltedData saltedData = new SaltedData(encrypted);
+		decrypted = new String(Crypto.decryptData(saltedData.getEncryptedData(), key.getDecryptedKey(), saltedData.getSalt()));
 	}
 	
 	public String encrypt(EncryptionKey key, String data) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		byte[] passwordSalt = Base64.decode("PMRz0L8VfkY=");
 		
-		byte[] dataRaw = Crypto.encryptData(data.getBytes(), key.getKeyRaw(), passwordSalt);
-		
-		return Base64.encodeSaltedKey(passwordSalt, dataRaw);
+		return new SaltedData(passwordSalt, Crypto.encryptData(data.getBytes(), key.getDecryptedKey(), passwordSalt)).getEncoded();
 	}	
 	
 }

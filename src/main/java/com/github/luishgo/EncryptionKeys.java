@@ -57,7 +57,7 @@ public class EncryptionKeys {
 	public void unlock(String masterPassword) {
 		keys.forEach((k,v) -> {
 			try {
-				v.extractKeyRaw(masterPassword);
+				v.decryptKey(masterPassword);
 			} catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException
 					| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
 				e.printStackTrace();
