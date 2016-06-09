@@ -1,7 +1,7 @@
 package com.github.luishgo;
 
 import java.io.Console;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -22,7 +22,7 @@ public class OnePass {
 		}
 		
 		try {
-			Vault vault = new Vault(args[0]);
+			Vault vault = Vault.open(args[0]);
 			char[] masterPassword = c.readPassword("Enter your Master Password: ");
 			
 			vault.unlock(new String(masterPassword));
@@ -37,7 +37,7 @@ public class OnePass {
 				System.exit(1);
 			}
 			
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}

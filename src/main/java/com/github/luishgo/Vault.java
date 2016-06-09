@@ -2,7 +2,6 @@ package com.github.luishgo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,50 +20,56 @@ import javax.crypto.NoSuchPaddingException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 
 public class Vault {
 
 	private Path vaultPath;
-	protected List<EncryptionKey> keys;
+	protected EncryptionKeys keys;
+	
+	public static Vault open(String path) throws IOException {
+		Vault vault = new Vault(path);
+		vault.checkIfExists();
+		vault.openEncryptionKeys();
+		return vault;
+	}
+	
+	public static Vault create(String path, String masterPassword) throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		Vault vault = new Vault(path);
+		vault.create(masterPassword);
+		return vault;
+	}
+	
+	private void create(String masterPassword) throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		Files.createDirectories(vaultPath.resolve("data/default"));
+		this.keys = EncryptionKeys.generate(masterPassword);
+		Files.write(Files.createFile(vaultPath.resolve("data/default/encryptionKeys.js")), keys.toJSONString().getBytes());
+		Files.createFile(vaultPath.resolve("data/default/contents.js"));
+		Files.write(Files.createFile(vaultPath.resolve("data/default/1password.keys")), keys.toPLISTString().getBytes());
+	}
 
-	public Vault(String path) throws FileNotFoundException {
-		vaultPath = Paths.get(path);
+	private Vault(String path) {
+		this.vaultPath = Paths.get(path);
+	}
+	
+	private void openEncryptionKeys() throws IOException {
+		this.keys = EncryptionKeys.open(vaultPath.resolve("data/default/encryptionKeys.js"));
+	}
+	
+	private void checkIfExists() throws FileNotFoundException {
 		if (!vaultPath.toFile().isDirectory()) {
 			throw new FileNotFoundException("Vault not found. Must be a .agilekeychain directory");
 		}
-        
-        try (Stream<String> stream = Files.lines(vaultPath.resolve("data/default/encryptionKeys.js"))) {
-        	parseEncryptionKeys(stream.findFirst().get());
-        } catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	private void parseEncryptionKeys(String json) {
-		JsonObject obj = new JsonParser().parse(json).getAsJsonObject();
-		Type encryptionKeyList = new TypeToken<List<EncryptionKey>>() {}.getType();
-		keys = new GsonBuilder().create().fromJson(obj.get("list"), encryptionKeyList);
 	}
 
 	public void unlock(String masterPassword) {
-		keys.stream().forEach(k -> {
-			try {
-				k.extractKeyRaw(masterPassword);
-			} catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException
-					| InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
-				e.printStackTrace();
-			}
-		});
+		this.keys.unlock(masterPassword);
 	}
 	
 	public String getDecryptedDataFrom(String title) {
 		Optional<ItemData> possibleItemData = getItems().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
 		if (possibleItemData.isPresent()) {
 			ItemData itemData = possibleItemData.get();
-			EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
+			EncryptionKey key = keys.getKey(itemData.getSecurityLevel());
 			try {
 				itemData.decrypt(key);
 				return itemData.getDecrypted();
@@ -80,7 +85,7 @@ public class Vault {
 		Optional<ItemData> possibleItemData = getItems().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
 		if (possibleItemData.isPresent()) {
 			ItemData itemData = possibleItemData.get();
-			EncryptionKey key = keys.stream().filter(k -> k.getLevel().equals(itemData.getSecurityLevel())).findFirst().get();
+			EncryptionKey key = keys.getKey(itemData.getSecurityLevel());
 			try {
 				return itemData.encrypt(key, data);
 			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException
@@ -93,6 +98,7 @@ public class Vault {
 
 	public List<ItemData> getItems() {
 		Gson gson = new GsonBuilder().create();
+		
         try (Stream<Path> files = Files.walk(vaultPath.resolve("data/default"))) {
     		return files.filter(p -> p.toFile().getName().endsWith(".1password")).map(p -> {
     			try(Stream<String> content = Files.lines(p)) {
@@ -109,7 +115,6 @@ public class Vault {
 		
 		return null;
 	}
-	
 
 
 }

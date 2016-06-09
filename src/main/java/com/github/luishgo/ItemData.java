@@ -1,11 +1,9 @@
 package com.github.luishgo;
 
 import java.beans.Transient;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -17,8 +15,6 @@ import javax.crypto.NoSuchPaddingException;
 import com.google.gson.Gson;
 
 public class ItemData {
-	
-	private static final String SALTED = "Salted__";
 
 	private String uuid;
 	
@@ -64,36 +60,15 @@ public class ItemData {
 		byte[] passwordSalt = Arrays.copyOfRange(password, 8, 16);
 		byte[] passwordData = Arrays.copyOfRange(password, 16, password.length);
 		
-		byte[] keyRaw = key.getKeyRaw();
-		byte[] passwordKey = deriveAESKey(keyRaw, passwordSalt);
-		byte[] passwordIV = deriveAESKey(passwordKey, keyRaw, passwordSalt);
-		
-		byte[] passwordRaw = Crypto.decrypt(passwordData, passwordKey, passwordIV);
-		
-		decrypted = new String(passwordRaw);
+		decrypted = new String(Crypto.decryptData(passwordData, key.getKeyRaw(), passwordSalt));
 	}
 	
 	public String encrypt(EncryptionKey key, String data) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		byte[] passwordSalt = Base64.decode("PMRz0L8VfkY=");
 		
-		byte[] keyRaw = key.getKeyRaw();
-		byte[] passwordKey = deriveAESKey(keyRaw, passwordSalt);
-		byte[] passwordIV = deriveAESKey(passwordKey, keyRaw, passwordSalt);
-
-		byte[] dataRaw = Crypto.encrypt(data.getBytes(), passwordKey, passwordIV);
+		byte[] dataRaw = Crypto.encryptData(data.getBytes(), key.getKeyRaw(), passwordSalt);
 		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(passwordSalt.length + dataRaw.length + SALTED.length());
-		baos.write(SALTED.getBytes());
-		baos.write(passwordSalt);
-		baos.write(dataRaw);
-		
-		return Base64.encode(baos.toByteArray());
+		return Base64.encodeSaltedKey(passwordSalt, dataRaw);
 	}	
-	
-	private byte[] deriveAESKey(byte[]... data) throws NoSuchAlgorithmException {
-		MessageDigest md = MessageDigest.getInstance("MD5");
-		Arrays.stream(data).forEach(d -> md.update(d));
-		return md.digest();
-	}
 	
 }
