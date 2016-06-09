@@ -32,11 +32,11 @@ public class EncryptionKey {
 	
 	private byte[] keyRaw;
 	
-	public static EncryptionKey generate(String masterPassword, String securityLevel) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
+	public static EncryptionKey generate(String masterPassword, int iterations, String securityLevel) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		EncryptionKey key = new EncryptionKey();
 		key.identifier = UUID.generate();
 		key.level = securityLevel;
-		key.iterations = new Random().nextInt(50000);
+		key.iterations = iterations;
 		key.generate(masterPassword);
 		
 		return key;
@@ -102,27 +102,4 @@ public class EncryptionKey {
 		return new JsonParser().parse(new Gson().toJson(this));
 	}
 
-	
-
 }
-
-//func encryptKey(masterPwd []byte, decryptedKey []byte, salt []byte, iterCount int) ([]byte, []byte, error) {
-//const keyLen = 32
-//derivedKey := pbkdf2.Key(masterPwd, salt, iterCount, keyLen, sha1.New)
-//aesKey := derivedKey[0:16]
-//iv := derivedKey[16:32]
-//encryptedKey, err := aesCbcEncrypt(aesKey, decryptedKey, iv)
-//if err != nil {
-//	return nil, nil, err
-//}
-//
-//validationSalt := randomBytes(8)
-//validationAesKey, validationIv := openSslKey(decryptedKey, validationSalt)
-//validationCipherText, err := aesCbcEncrypt(validationAesKey, decryptedKey, validationIv)
-//if err != nil {
-//	return nil, nil, fmt.Errorf("Failed to encrypt validation: %v", err)
-//}
-//validation := []byte("Salted__" + string(validationSalt) + string(validationCipherText))
-//
-//return encryptedKey, validation, nil
-//}

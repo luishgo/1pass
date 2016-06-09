@@ -11,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Stream;
 
 import javax.crypto.BadPaddingException;
@@ -47,8 +48,9 @@ public class EncryptionKeys {
 
 	public static EncryptionKeys generate(String masterPassword) throws InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		EncryptionKeys keys = new EncryptionKeys();
-		keys.keys.put("SL5", EncryptionKey.generate(masterPassword, "SL5"));
-		keys.keys.put("SL3", EncryptionKey.generate(masterPassword, "SL3"));
+		int iterations = new Random().nextInt(50000);
+		keys.keys.put("SL5", EncryptionKey.generate(masterPassword, iterations, "SL5"));
+		keys.keys.put("SL3", EncryptionKey.generate(masterPassword, iterations, "SL3"));
 		return keys;
 	}
 	
