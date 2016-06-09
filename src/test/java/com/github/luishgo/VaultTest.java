@@ -29,7 +29,8 @@ public class VaultTest {
 	@Test public void shouldCreateVault() throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
 		Vault.create("src/test/resources/tmp.agilekeychain", "tmp");
 		
-		Vault.open("src/test/resources/tmp.agilekeychain");
+		Vault vault = Vault.open("src/test/resources/tmp.agilekeychain");
+		vault.unlock("tmp");
 		
 		try (Stream<Path> files = Files.walk(Paths.get("src/test/resources/tmp.agilekeychain"))) {
 			files.sorted((p1, p2) -> Integer.compare(p2.toString().length(), p1.toString().length())).forEach(f -> {

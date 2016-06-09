@@ -41,16 +41,14 @@ public class EncryptionKey {
 	}
 	
 	private void generate(String masterPassword) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
-		byte[] keySalt = Crypto.randomByteArray(8);
-		byte[] keyData = Crypto.randomByteArray(1024);
+		SaltedData saltedKey = SaltedData.newRandom();
+		byte[] derivedKey = deriveKey(masterPassword, iterations, saltedKey.getSalt());
+		saltedKey.encryptKey(derivedKey);
+		this.data = saltedKey.getEncoded();
 		
-		byte[] derivedKey = deriveKey(masterPassword, iterations, keySalt);
-		
-		this.data = new SaltedData(keySalt, Crypto.encryptKey(keyData, derivedKey)).getEncoded();
-		
-		byte[] validationSalt = Crypto.randomByteArray(8);
-		
-		this.validation = new SaltedData(validationSalt, Crypto.encryptData(keyData, keyData, validationSalt)).getEncoded(); 
+		SaltedData validationSaltedData = SaltedData.newFromDecrypted(saltedKey.getDecryptedData());
+		validationSaltedData.encryptData(saltedKey.getDecryptedData());
+		this.validation = validationSaltedData.getEncoded();
 	}
 	
 	public String getData() {
@@ -80,15 +78,13 @@ public class EncryptionKey {
 	public void decryptKey(String masterPassword)
 			throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException,
 			InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		SaltedData decodedKey = new SaltedData(data);
+		SaltedData decodedKey = SaltedData.newFromEncoded(data);
 		
 		byte[] derivedKey = deriveKey(masterPassword, iterations, decodedKey.getSalt());
 		
-		decryptedKey = Crypto.decryptKey(decodedKey.getEncryptedData(), derivedKey);
+		decryptedKey = decodedKey.decryptKey(derivedKey);
 		
-		SaltedData decodedValidation = new SaltedData(validation);
-		
-		byte[] decryptedValidation = Crypto.decryptData(decodedValidation.getEncryptedData(), decryptedKey, decodedValidation.getSalt());
+		byte[] decryptedValidation = SaltedData.newFromEncoded(validation).decryptData(decryptedKey);
 		
 		if (!new String(decryptedValidation).equalsIgnoreCase(new String(decryptedKey))) {
 			throw new InvalidKeyException("Key Data != Validation!!");
