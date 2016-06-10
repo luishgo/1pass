@@ -26,10 +26,9 @@ public class BaseSaltedData {
 	public static <T extends BaseSaltedData> T newFromEncoded(String base64Encoded, T baseSaltedData) {
 		byte[] decoded = Base64.decode(base64Encoded);
 		
-		return newFromSaltAndDecrypted(
-				Arrays.copyOfRange(decoded, 8, 16),
-				Arrays.copyOfRange(decoded, 16, decoded.length),
-				baseSaltedData);
+		baseSaltedData.salt = Arrays.copyOfRange(decoded, 8, 16);
+		baseSaltedData.encrypted = Arrays.copyOfRange(decoded, 16, decoded.length);
+		return baseSaltedData; 
 	}
 	
 	public static <T extends BaseSaltedData> T newFromSaltAndDecrypted(byte[] salt, byte[] decrypted, T baseSaltedData) {
