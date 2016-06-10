@@ -9,6 +9,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,6 +21,8 @@ import javax.crypto.NoSuchPaddingException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 public class Vault {
 
@@ -66,7 +69,7 @@ public class Vault {
 	}
 	
 	public String getDecryptedDataFrom(String title) {
-		Optional<ItemData> possibleItemData = getItems().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
+		Optional<ItemData> possibleItemData = getItemsData().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
 		if (possibleItemData.isPresent()) {
 			ItemData itemData = possibleItemData.get();
 			EncryptionKey key = keys.getKey(itemData.getSecurityLevel());
@@ -82,7 +85,7 @@ public class Vault {
 	}
 	
 	public String getEncryptedDataFrom(String title, String data) {
-		Optional<ItemData> possibleItemData = getItems().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
+		Optional<ItemData> possibleItemData = getItemsData().stream().filter(i -> title.equalsIgnoreCase(i.getTitle())).findFirst();
 		if (possibleItemData.isPresent()) {
 			ItemData itemData = possibleItemData.get();
 			EncryptionKey key = keys.getKey(itemData.getSecurityLevel());
@@ -96,7 +99,7 @@ public class Vault {
 		return null;
 	}
 
-	public List<ItemData> getItems() {
+	public List<ItemData> getItemsData() {
 		Gson gson = new GsonBuilder().create();
 		
         try (Stream<Path> files = Files.walk(vaultPath.resolve("data/default"))) {
@@ -115,6 +118,20 @@ public class Vault {
 		
 		return null;
 	}
+	
+	public List<Item> getItems() {
+		List<Item> items = new ArrayList<Item>();
+        try (Stream<String> lines = Files.lines(vaultPath.resolve("data/default/contents.js"))) {
+        	JsonElement contents = new JsonParser().parse(lines.findFirst().get());
+        	contents.getAsJsonArray().forEach(c -> {
+        		items.add(Item.newFromJSONArray(c.getAsJsonArray(), vaultPath.resolve("data/default")));
+        	});
+        } catch (IOException e) {
+			e.printStackTrace();
+		}
+		return items;
+	}
+	
 
 
 }

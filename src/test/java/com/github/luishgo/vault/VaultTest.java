@@ -10,6 +10,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
 
 import javax.crypto.BadPaddingException;
@@ -49,9 +50,19 @@ public class VaultTest {
 		Vault.open("crap");
 	}
 	
-	@Test public void shouldReadItems() throws IOException {
+	@Test public void shouldListItemsData() throws IOException {
 		Vault vault = Vault.open("src/test/resources/demo.agilekeychain");
-		Assert.assertEquals(1, vault.getItems().size());
+		List<ItemData> itemsData = vault.getItemsData();
+		Assert.assertEquals(1, itemsData.size());
+		Assert.assertEquals("teste", itemsData.get(0).getTitle());
+	}
+	
+	@Test public void shouldListItems() throws IOException {
+		Vault vault = Vault.open("src/test/resources/demo.agilekeychain");
+		List<Item> items = vault.getItems();
+		Assert.assertEquals(1, items.size());
+		Assert.assertEquals("teste", items.get(0).getTitle());
+		Assert.assertEquals("SL5", items.get(0).data.getSecurityLevel());
 	}
 	
 	@Test public void shouldDecryptItem() throws IOException {
