@@ -65,4 +65,16 @@ public class ItemData {
 		return saltedData.getEncoded();		
 	}	
 	
+//	var TYPE_WEBFORMS='webforms.WebForm', 
+//		TYPE_FOLDERS='system.folder.Regular', 
+//		TYPE_NOTES='securenotes.SecureNote', 
+//		TYPE_IDENTITIES='identities.Identity', 
+//		TYPE_PASSWORDS='passwords.Password', 
+//		TYPE_WALLET='wallet', 
+//		TYPE_SOFTWARE_LICENSES='wallet.computer.License', 
+//		TYPE_TRASHED='trashed', 
+//		TYPE_ACCOUNT='account', 
+//		TYPE_ACCOUNT_ONLINESERVICE='wallet.onlineservices.', 
+//		TYPE_ACCOUNT_COMPUTER='wallet.computer.';
+	
 }

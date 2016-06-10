@@ -62,7 +62,7 @@ public class VaultTest {
 		List<Item> items = vault.getItems();
 		Assert.assertEquals(1, items.size());
 		Assert.assertEquals("teste", items.get(0).getTitle());
-		Assert.assertEquals("SL5", items.get(0).data.getSecurityLevel());
+		Assert.assertEquals("SL5", items.get(0).getData().getSecurityLevel());
 	}
 	
 	@Test public void shouldDecryptItem() throws IOException {
