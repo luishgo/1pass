@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.vault;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,6 +17,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
 import org.junit.Test;
+
+import com.github.luishgo.vault.Vault;
 
 import junit.framework.Assert;
 

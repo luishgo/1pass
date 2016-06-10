@@ -1,9 +1,11 @@
-package com.github.luishgo;
+package com.github.luishgo.vault;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 
 import org.junit.Test;
+
+import com.github.luishgo.vault.EncryptionKeys;
 
 import junit.framework.Assert;
 

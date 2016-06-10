@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.vault;
 
 import java.beans.Transient;
 import java.io.IOException;
@@ -11,6 +11,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import com.github.luishgo.crypto.SaltedData;
+import com.github.luishgo.util.Base64;
 import com.google.gson.Gson;
 
 public class ItemData {

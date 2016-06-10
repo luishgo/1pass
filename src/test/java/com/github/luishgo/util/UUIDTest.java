@@ -1,6 +1,8 @@
-package com.github.luishgo;
+package com.github.luishgo.util;
 
 import org.junit.Test;
+
+import com.github.luishgo.util.UUID;
 
 import junit.framework.Assert;
 

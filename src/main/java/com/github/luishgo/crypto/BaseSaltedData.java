@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.crypto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,6 +14,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.github.luishgo.util.Base64;
 
 public class BaseSaltedData {
 

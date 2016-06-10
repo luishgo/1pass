@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.vault;
 
 import java.io.IOException;
 import java.io.StringWriter;

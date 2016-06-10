@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.crypto;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;

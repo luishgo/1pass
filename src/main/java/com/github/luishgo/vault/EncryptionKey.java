@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.vault;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -10,6 +10,9 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import com.github.luishgo.crypto.SaltedData;
+import com.github.luishgo.crypto.SaltedKey;
+import com.github.luishgo.util.UUID;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;

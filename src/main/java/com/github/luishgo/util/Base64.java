@@ -1,4 +1,4 @@
-package com.github.luishgo;
+package com.github.luishgo.util;
 
 public class Base64 {
 	
