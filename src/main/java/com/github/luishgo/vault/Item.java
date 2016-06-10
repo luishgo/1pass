@@ -8,26 +8,27 @@ import java.util.stream.Stream;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.annotations.Expose;
 
 public class Item {
 	
-	private String uuid;
+	@Expose private String uuid;
 	
-	private String typeName;
+	@Expose private String typeName;
 	
-	private String title;
+	@Expose private String title;
 	
-	private String domain;
+	@Expose private String domain;
 	
-	private String updateAt;
+	@Expose private String updateAt;
 	
-	private String folderUUID;
+	@Expose private String folderUUID;
 	
-	private int passwordStrength = 0;
+	@Expose private int passwordStrength = 0;
 	
-	private String trashed;
+	@Expose private String trashed;
 	
-	protected ItemData data;
+	@Expose protected ItemData data;
 
 	private Path basePath;
 

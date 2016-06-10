@@ -132,6 +132,19 @@ public class Vault {
 		return items;
 	}
 	
+	public Optional<Item> getItemDecrypted(String title) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+		Optional<Item> possibleItem = getItems().stream().filter(i -> i.getTitle().equalsIgnoreCase(title)).findFirst();
+		if (possibleItem.isPresent()) {
+			Item item = possibleItem.get();
+			ItemData itemData = item.getData();
+			EncryptionKey key = keys.getKey(itemData.getSecurityLevel());
+			itemData.decrypt(key);
+			return Optional.of(item);
+		}
+		return possibleItem;
+	}
+
+	
 
 
 }

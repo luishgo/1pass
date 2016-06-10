@@ -1,6 +1,5 @@
 package com.github.luishgo.vault;
 
-import java.beans.Transient;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -14,32 +13,34 @@ import javax.crypto.NoSuchPaddingException;
 import com.github.luishgo.crypto.SaltedData;
 import com.github.luishgo.util.Base64;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.annotations.Expose;
 
 public class ItemData {
 
-	private String uuid;
+	@Expose private String uuid;
 	
-	private String updatedAt;
+	@Expose private String updatedAt;
 	
-	private String securityLevel;
+	@Expose private String securityLevel;
 	
-	private String contentsHash;
+	@Expose private String contentsHash;
 	
-	private String title;
+	@Expose private String title;
 	
-	private String encrypted;
+	@Expose private String encrypted;
 	
-	private String txTimestamp;
+	@Expose private String txTimestamp;
 	
-	private String createdAt;
+	@Expose private String createdAt;
 	
-	private String typeName;
+	@Expose private String typeName;
 	
-	private String decrypted;
+	@Expose private JsonElement decrypted;
 	
-	@Transient
 	public String getDecrypted() {
-		return decrypted;
+		return decrypted.toString();
 	}
 	
 	public String getSecurityLevel() {
@@ -56,7 +57,7 @@ public class ItemData {
 	}
 
 	public void decrypt(EncryptionKey key) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		decrypted = new String(SaltedData.newFromEncoded(encrypted).decryptData(key.getDecryptedKey()));
+		decrypted = new JsonParser().parse(new String(SaltedData.newFromEncoded(encrypted).decryptData(key.getDecryptedKey())));
 	}
 	
 	public String encrypt(EncryptionKey key, String data) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {

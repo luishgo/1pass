@@ -2,8 +2,18 @@ package com.github.luishgo;
 
 import java.io.Console;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import com.github.luishgo.vault.Item;
 import com.github.luishgo.vault.Vault;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -12,7 +22,7 @@ public class OnePass {
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
-			System.err.println("Usage: <vault path> <item title>");
+			System.err.println("Usage: <vault path> list | get <item title>");
 			System.exit(1);
 		}
 		
@@ -24,21 +34,27 @@ public class OnePass {
 		
 		try {
 			Vault vault = Vault.open(args[0]);
+			
 			char[] masterPassword = c.readPassword("Enter your Master Password: ");
-			
 			vault.unlock(new String(masterPassword));
-			String result = vault.getDecryptedDataFrom(args[1]);
 			
-			if (result != null) {
-				JsonParser parser = new JsonParser();
-				JsonElement element = parser.parse(result);
-				System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(element));
-			} else {
-				System.err.println("Item not found");
-				System.exit(1);
+			Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+			if (args[1].equalsIgnoreCase("list")) {
+				vault.getItems().stream().forEach(i -> {
+					System.out.println(gson.toJson(i));
+				});
+			} 
+			if (args[1].equalsIgnoreCase("get")) {
+				String title = args[2];
+				Optional<Item> possibleItem = vault.getItemDecrypted(title);
+				if (possibleItem.isPresent()) {
+					System.out.println(gson.toJson(possibleItem.get()));
+				} else {
+					System.err.println("Item not found");
+					System.exit(1);
+				}
 			}
-			
-		} catch (IOException e) {
+		} catch (IOException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}
