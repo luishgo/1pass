@@ -1,5 +1,11 @@
 # 1pass
 
+## TODO
+
+* Class Item and ItemData as JSONElement or JSONObject
+* Create and Save Item and ItemData in a Vault
+* Create class Items?
+
 `encryptionKeys.js`
 ```javascript
 {
@@ -46,11 +52,11 @@
 		"43457CD3E8F44F07A3CAC7DFD1DBD2F2", //uuid
 		"passwords.Password", //typeName
 		"teste", //title
-		"", //location
+		"", //domain
 		1465226317, //updatedAt
 		"", //folderUUID
-		0, //???
-		"N" //Trashed
+		0, // passwordStrength
+		"N" //trashed
 	]
 ]
 ```

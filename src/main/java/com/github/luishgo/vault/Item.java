@@ -54,6 +54,10 @@ public class Item {
 		return title;
 	}
 	
+	public String getUUID() {
+		return uuid;
+	}
+	
 	public Path getDataPath() {
 		return basePath.resolve(this.uuid+".1password");
 	}

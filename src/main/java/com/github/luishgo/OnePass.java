@@ -48,7 +48,9 @@ public class OnePass {
 				String title = args[2];
 				Optional<Item> possibleItem = vault.getItemDecrypted(title);
 				if (possibleItem.isPresent()) {
-					System.out.println(gson.toJson(possibleItem.get()));
+					Item item = possibleItem.get();		
+					System.out.println(item.getUUID());
+					System.out.println(gson.toJson(item));
 				} else {
 					System.err.println("Item not found");
 					System.exit(1);
