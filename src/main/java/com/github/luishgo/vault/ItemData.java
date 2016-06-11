@@ -44,7 +44,7 @@ public class ItemData {
 	}
 	
 	public String getSecurityLevel() {
-		return securityLevel;
+		return securityLevel != null && !"".equals(securityLevel) ? securityLevel : "SL5";
 	}
 	
 	public String getTitle() {
@@ -57,7 +57,9 @@ public class ItemData {
 	}
 
 	public void decrypt(EncryptionKey key) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-		decrypted = new JsonParser().parse(new String(SaltedData.newFromEncoded(encrypted).decryptData(key.getDecryptedKey())));
+		SaltedData saltedData = SaltedData.newFromEncoded(encrypted);
+		saltedData.decryptData(key.getDecryptedKey());
+		decrypted = new JsonParser().parse(new String(saltedData.getDecryptedData()));
 	}
 	
 	public String encrypt(EncryptionKey key, String data) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
