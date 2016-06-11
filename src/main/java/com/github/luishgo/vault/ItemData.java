@@ -19,26 +19,26 @@ import com.google.gson.annotations.Expose;
 
 public class ItemData {
 
-	@Expose private String uuid;
+	@Expose String uuid;
 	
-	@Expose private String updatedAt;
+	@Expose long updatedAt;
 	
-	@Expose private String securityLevel;
+	@Expose String securityLevel;
 	
 	@Expose private String contentsHash;
 	
-	@Expose private String title;
+	@Expose String title;
 	
 	@Expose private String encrypted;
 	
-	@Expose private String txTimestamp;
+	@Expose private long txTimestamp;
 	
-	@Expose private String createdAt;
+	@Expose long createdAt;
 	
-	@Expose private String typeName;
+	@Expose String typeName;
 	
-	@Expose private JsonElement decrypted;
-	
+	@Expose JsonElement decrypted;
+
 	public String getDecrypted() {
 		return decrypted.toString();
 	}
@@ -62,10 +62,17 @@ public class ItemData {
 		decrypted = new JsonParser().parse(new String(saltedData.getDecryptedData()));
 	}
 	
+	@Deprecated
 	public String encrypt(EncryptionKey key, String data) throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
 		SaltedData saltedData = SaltedData.newFromSaltAndDecrypted(Base64.decode("PMRz0L8VfkY="), data.getBytes());
 		saltedData.encryptData(key.getDecryptedKey());
 		return saltedData.getEncoded();		
+	}
+
+	public void encrypt(EncryptionKey key) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
+		SaltedData saltedData = SaltedData.newFromDecrypted(decrypted.toString().getBytes());
+		saltedData.encryptData(key.getDecryptedKey());
+		encrypted = saltedData.getEncoded();		
 	}	
 	
 //	var TYPE_WEBFORMS='webforms.WebForm', 

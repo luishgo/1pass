@@ -21,6 +21,7 @@ import javax.crypto.NoSuchPaddingException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
@@ -122,9 +123,11 @@ public class Vault {
 	public List<Item> getItems() {
 		List<Item> items = new ArrayList<Item>();
         try (Stream<String> lines = Files.lines(vaultPath.resolve("data/default/contents.js"))) {
-        	JsonElement contents = new JsonParser().parse(lines.findFirst().get());
-        	contents.getAsJsonArray().forEach(c -> {
-        		items.add(Item.newFromJSONArray(c.getAsJsonArray(), vaultPath.resolve("data/default")));
+        	lines.findFirst().ifPresent(line -> {
+        		JsonElement contents = new JsonParser().parse(line);
+        		contents.getAsJsonArray().forEach(c -> {
+        			items.add(Item.newFromJSONArray(c.getAsJsonArray(), vaultPath.resolve("data/default")));
+        		});
         	});
         } catch (IOException e) {
 			e.printStackTrace();
@@ -144,6 +147,36 @@ public class Vault {
 		return possibleItem;
 	}
 
+	public Item addItem(String title, String password) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, IOException {
+		Item item = Item.createPassword(title, password);
+		item.setBasePath(vaultPath.resolve("data/default"));
+		item.encryptData(keys.getKey("SL5"));
+		item.save();
+		
+		List<Item> items = getItems();
+		items.add(item);
+		save(items);
+
+		return item;
+	}
+
+	private void save(List<Item> items) throws IOException {
+		JsonArray contents = new JsonArray();
+		items.stream().forEach(item -> {
+			JsonArray element = new JsonArray();
+			element.add(item.getUUID());
+			element.add(item.typeName);
+			element.add(item.getTitle());
+			element.add(item.domain);
+			element.add(item.updatedAt);
+			element.add(item.folderUUID);
+			element.add(item.passwordStrength);
+			element.add(item.trashed);
+			contents.add(element);
+		});
+		
+		Files.write(vaultPath.resolve("data/default/contents.js"), contents.toString().getBytes());
+	}
 	
 
 
